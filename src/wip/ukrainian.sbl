@@ -1,0 +1,280 @@
+/**
+ * WIP
+ *
+ * https://github.com/snowballstem/snowball/pull/178
+ */
+
+stringescapes {}
+
+/* the 33 Ukrainian letters and apostrophe represented by single quote */
+
+stringdef a    '{U+0430}'
+stringdef b    '{U+0431}'
+stringdef v    '{U+0432}'
+stringdef gh   '{U+0433}'
+stringdef g    '{U+0491}'
+stringdef d    '{U+0434}'
+stringdef e    '{U+0435}'
+stringdef ye   '{U+0454}'
+stringdef zh   '{U+0436}'
+stringdef z    '{U+0437}'
+stringdef y    '{U+0438}'
+stringdef i    '{U+0456}'
+stringdef yi   '{U+0457}'
+stringdef i`   '{U+0439}'
+stringdef k    '{U+043A}'
+stringdef l    '{U+043B}'
+stringdef m    '{U+043C}'
+stringdef n    '{U+043D}'
+stringdef o    '{U+043E}'
+stringdef p    '{U+043F}'
+stringdef r    '{U+0440}'
+stringdef s    '{U+0441}'
+stringdef t    '{U+0442}'
+stringdef u    '{U+0443}'
+stringdef f    '{U+0444}'
+stringdef kh   '{U+0445}'
+stringdef ts   '{U+0446}'
+stringdef ch   '{U+0447}'
+stringdef sh   '{U+0448}'
+stringdef shch '{U+0449}'
+stringdef soft '{U+044C}'
+stringdef iu   '{U+044E}'
+stringdef ia   '{U+044F}'
+
+// Apostrophe-like symbols
+// stringdef a_apostrophe      '{U+0027}' // '
+// stringdef a_grave_accent   U+0060   // ` cannot to remove system char in Snowball
+stringdef a_ml_prime        '{U+02B9}' // {a_ml_prime}
+stringdef a_mlt_comma       '{U+02BB}' // {a_mlt_comma}
+stringdef a_ml_apostrophe   '{U+02BC}' // {a_ml_apostrophe}
+stringdef a_mlr_comma       '{U+02BD}' // {a_mlr_comma}
+stringdef a_mlv_line        '{U+02C8}' // {a_mlv_line}
+stringdef a_lsq_mark        '{U+2018}' // {a_lsq_mark}
+stringdef a_rsq_mark        '{U+2019}' // {a_rsq_mark}
+stringdef a_shr9q_mark      '{U+201B}' // {a_shr9q_mark}
+stringdef a_prime           '{U+2032}' // {a_prime}
+
+routines (
+  prelude
+  mark_regions R1 R2
+  perfective_gerund
+  adjective
+  adjectival
+  reflexive
+  verb
+  noun
+  common_avn
+  derivational
+  // tidy_up
+)
+
+externals ( stem )
+
+integers ( pV p1 p2 )
+
+groupings ( v )
+
+define v '{a}{e}{ye}{y}{i}{yi}{o}{u}{iu}{ia}'
+
+define prelude as (
+  do repeat ( goto (['{g}']) <- '{gh}' )
+
+  // Remove any apostrophe-like symbols
+  do repeat ( goto (['{'}']) delete )
+  do repeat ( goto (['{a_ml_prime}']) delete )
+  do repeat ( goto (['{a_mlt_comma}']) delete )
+  do repeat ( goto (['{a_ml_apostrophe}']) delete )
+  do repeat ( goto (['{a_mlr_comma}']) delete )
+  do repeat ( goto (['{a_mlv_line}']) delete )
+  do repeat ( goto (['{a_lsq_mark}']) delete )
+  do repeat ( goto (['{a_rsq_mark}']) delete )
+  do repeat ( goto (['{a_shr9q_mark}']) delete )
+  do repeat ( goto (['{a_prime}']) delete )
+)
+
+define mark_regions as (
+  $pV = limit
+  $p1 = limit
+  $p2 = limit
+  do (
+    gopast v  setmark pV  gopast non-v setmark p1
+    gopast v  gopast non-v  setmark p2
+  )
+)
+
+backwardmode (
+  define R1 as $p1 <= cursor
+  define R2 as $p2 <= cursor
+
+  define perfective_gerund as (
+    [substring] among (
+      '{v}'      // {d}{o}{n}{a}{p}{y}{s}{a}|{v}    {d}{o}{r}{o}{b}{y}|{v} {d}{o}{r}{o}{b}{y}|{v}
+      '{v}{sh}{y}'    // {n}{a}{p}{y}{s}{a}|{v}{sh}{y}    {z}{r}{o}{b}{y}|{v}{sh}{y}
+      '{v}{sh}{y}{s}{soft}'  // {o}{b}{e}{r}{i}{gh}{a}|{v}{sh}{y}{s}{soft} {s}{p}{a}{k}{u}{v}{a}|{v}{sh}{y}{s}{soft}
+      '{v}{sh}{y}{s}{ia}'  // {o}{b}{e}{r}{i}{gh}{a}|{v}{sh}{y}{s}{ia} {s}{p}{o}{d}{i}{v}{a}|{v}{sh}{y}{s}{ia}
+               // ('{a}' or '{ia}' delete) ???
+      '{u}{ch}{y}'    // {p}{y}{sh}|{u}{ch}{y}       {r}{e}{v}|{u}{ch}{y}
+      '{iu}{ch}{y}'    // {s}{ia}|{iu}{ch}{y}        {p}{i}{d}{p}{y}{s}{u}|{iu}{ch}{y}
+      '{iu}{ch}{y}{s}{soft}'  // {z}{m}{a}{gh}{a}|{iu}{ch}{y}{s}{soft}
+      '{iu}{ch}{y}{s}{ia}'  // {n}{a}{v}{ch}{a}|{iu}{ch}{y}{s}{ia}
+      '{a}{ch}{y}'    // {b}{a}{ch}|{a}{ch}{y}
+      '{a}{ch}{y}{s}{soft}'  // {b}{a}{ch}|{a}{ch}{y}{s}{soft}
+      '{a}{ch}{y}{s}{ia}'  // {b}{a}{ch}|{a}{ch}{y}{s}{ia}
+      '{l}{ia}{ch}{y}'   // {r}{o}{b}|{l}{ia}{ch}{y}      {l}{iu}{b}|{l}{ia}{ch}{y}
+      '{l}{ia}{ch}{y}{s}{soft}' // {b}{a}{v}|{l}{ia}{ch}{y}{s}{soft}
+      '{l}{ia}{ch}{y}{s}{ia}' // {b}{a}{v}|{l}{ia}{ch}{y}{s}{ia}
+      '{ia}{ch}{y}'    // {s}{y}{d}|{ia}{ch}{y}       {v}{o}{v}{t}{u}{z}|{ia}{ch}{y}
+      '{ia}{ch}{y}{s}{soft}'  // ???
+      '{ia}{ch}{y}{s}{ia}'  // ???
+        (delete)
+   )
+  )
+
+  define adjective as (
+    [substring] among (
+      '{y}{i`}' '{o}{gh}{o}' '{o}{m}{u}' '{y}{m}' '{i}{m}'
+      '{i}{sh}{y}{i`}' '{i}{sh}{o}{gh}{o}' '{i}{sh}{o}{m}{u}' '{i}{sh}{y}{m}' '{i}{sh}{i}{m}' '{i}{sh}{e}'
+      '{o}{yi}' '{i}{i`}' '{o}{iu}'
+      '{i}{sh}{a}' '{i}{sh}{o}{yi}' '{i}{sh}{i}{i`}' '{i}{sh}{u}' '{i}{sh}{o}{iu}'
+      '{y}{kh}' '{y}{m}{y}'
+      '{i}{sh}{i}' '{i}{sh}{y}{kh}' '{i}{sh}{y}{m}{y}'
+      '{soft}{o}{gh}{o}' '{soft}{o}{m}{u}'
+      '{soft}{o}{yi}' '{soft}{o}{iu}'
+      '{i}{kh}' '{i}{m}{y}'
+
+      '{ia}{ch}{a}' '{ia}{ch}{e}' '{ia}{ch}{u}' '{ia}{ch}{i}'
+      '{a}{ch}{a}' '{a}{ch}{e}' '{a}{ch}{u}' '{a}{ch}{i}'
+      '{iu}{ch}{a}' '{iu}{ch}{e}' '{iu}{ch}{u}' '{iu}{ch}{i}'
+      '{u}{ch}{a}' '{u}{ch}{e}' '{u}{ch}{u}' '{u}{ch}{i}'
+        (delete)
+    )
+  )
+
+  define adjectival as (
+    adjective
+
+    try (
+      [substring] among (
+        '{ia}{ch}'
+        '{a}{ch}'
+        '{iu}{ch}'
+        '{u}{ch}'
+          (delete)
+
+        // Need or needn't ?
+        // '{e}{n}' // {v}{t}{r}{a}{ch}|{e}{n}{y}{i`}  {v}{t}{r}{a}{ch}|{e}{n}{o}{gh}{o}   {v}{t}{r}{a}{ch}|{e}{n}{o}{m}{u}   {v}{t}{r}{a}{ch}|{e}{n}{y}{m}    {v}{t}{r}{a}{ch}|{e}{n}{i}{m}
+                // {v}{t}{r}{a}{ch}|{e}{n}{a}   {v}{t}{r}{a}{ch}|{e}{n}{e}     {v}{t}{r}{a}{ch}|{e}{n}{o}{yi}    {v}{t}{r}{a}{ch}|{e}{n}{i}{i`}    {v}{t}{r}{a}{ch}|{e}{n}{u}   {v}{t}{r}{a}{ch}|{e}{n}{o}{iu}
+                // {v}{t}{r}{a}{ch}|{e}{n}{i}   {v}{t}{r}{a}{ch}|{e}{n}{y}{kh}    {v}{t}{r}{a}{ch}|{e}{n}{y}{m}{y}
+      )
+    )
+  )
+
+  define reflexive as (
+    [substring] among (
+      '{s}{ia}'    // {o}{s}{i}{k}|{s}{ia}
+      '{s}{soft}'    // {n}{e}{d}{o}{n}{a}{v}{ch}{y}|{s}{soft}
+      '{ye}{t}{soft}{s}{ia}' // {s}{m}{i}|{ye}{t}{soft}{s}{ia}
+      '{e}{t}{soft}{s}{ia}' // {s}{p}{y}{sh}|{e}{t}{soft}{s}{ia}
+        (delete)
+    )
+  )
+
+  define verb as (
+    [substring] among (
+      '{t}{y}'
+      // '{t}{soft}'  // {r}{o}{b}{y}|{t}{soft} ???
+      '{i}{t}{soft}'
+      '{t}{e}'
+
+      '{i`}{t}{e}'
+      '{l}{a}' '{l}{o}' '{l}{y}'
+      '{ye}{sh}' '{ye}{m}{o}' '{ye}{t}{e}' '{iu}{t}{soft}'
+      '{e}{sh}' '{e}{m}{o}' '{e}{t}{e}' '{u}{t}{soft}'
+      '{l}{iu}' '{y}{sh}' '{y}{t}{soft}' '{y}{m}{o}' '{y}{t}{e}' '{l}{ia}{t}{soft}'
+      '{yi}{sh}' '{yi}{t}{soft}' '{yi}{m}{o}' '{yi}{t}{e}' '{ia}{t}{soft}'
+      '{a}{t}{soft}'
+        (delete)
+    )
+  )
+
+  define noun as (
+    [substring] among (
+      '{a}{m}' '{a}{m}{y}' '{a}{kh}'
+      '{e}{iu}'
+      '{ia}{m}' '{ia}{m}{y}' '{ia}{kh}'
+      '{o}{v}{i}' '{o}{m}'
+      '{e}{ts}{soft}' '{e}{m}'
+      '{e}{n}{soft}'
+      '{o}{i`}'
+      '{i}{iu}' '{i}{yi}'
+        (delete)
+    )
+  )
+
+  define common_avn as (
+    [substring] among (
+      // adj
+      // {z}{e}{l}{e}{n}|{a}  {z}{e}{l}{e}{n}|{e}   {z}{e}{l}{e}{n}|{i}   {z}{e}{l}{e}{n}|{u}  {v}{e}{r}{kh}{n}|{iu}  {v}{e}{r}{kh}{n}|{ia}
+
+      // verb
+      // {p}{y}{s}{a}|{v}   {p}{y}{sh}|{e}     {ch}{y}{t}{a}|{ye}    {ch}{y}{t}{a}|{i`}   {p}{y}{sh}|{u}    {ch}{y}{t}{a}|{iu}
+
+      // noun
+      // {v}{o}{d}|{a}    {p}{i}{s}{n}|{e}    {v}{o}{d}|{y}     {v}{o}{d}|{i}    {s}{a}{r}{a}|{i`}
+      // {v}{o}{d}|{o}    {v}{o}{d}|{u}     {s}{o}{v}{i}{s}{t}|{soft}  {p}{i}{s}{n}|{iu}   {p}{i}{s}{n}|{ia}
+      // {gh}{e}{n}|{i}{i`}   {v}{o}{d}|{o}{iu}
+
+      '{a}' '{v}' '{e}' '{ye}' '{y}' '{i}'
+      '{i`}' '{o}' '{u}' '{soft}' '{iu}' '{ia}'
+      '{i}{i`}' '{o}{iu}'
+        (delete)
+    )
+  )
+
+  define derivational as (
+    [substring] R2 among (
+      '{i}{s}{t}'  // {b}{e}{z}{t}{u}{r}{b}{o}{t}{n}|{i}{s}{t}.{iu}
+      '{o}{s}{t}'  // {b}{e}{z}{t}{u}{r}{b}{o}{t}{n}|{o}{s}{t}.{i}
+        (delete)
+    )
+  )
+
+  // define tidy_up as (
+  //     [substring] among (
+  //         // '{e}{i`}{sh}'
+  //         // '{e}{i`}{sh}{e}'  // superlative forms
+  //         //    (delete
+  //         //     ['{n}'] '{n}' delete
+  //         //    )
+  //         // '{n}'
+  //         //    ('{n}' delete) // e.g. -nno endings
+  //         // '{'}'
+  //         //    (delete)  // with some slight false conflations
+  //     )
+  // )
+)
+
+define stem as (
+  // Normalise {e"} to {e}.  The documentation has long suggested the user
+  // should do this before calling the stemmer - we now do it for them.
+  // do repeat ( goto (['{e"}']) <- '{e}' )
+
+  do prelude
+  do mark_regions
+
+  backwards setlimit tomark pV for (
+    do (
+      perfective_gerund or
+      (
+        try reflexive
+
+        adjectival or verb or noun or common_avn
+      )
+    )
+
+    do derivational
+    // do tidy_up
+  )
+)
+

@@ -1,0 +1,4 @@
+czech           UTF_8         czech,cs           [WIP]      https://www.fit.vut.cz/research/product/133/.en
+polish          UTF_8         polish,pl          [WIP]      https://github.com/snowballstem/snowball/pull/159/
+slovak          UTF_8         slovak,sk          [WIP]      https://github.com/snowballstem/snowball/pull/149/
+ukrainian       UTF_8         ukrainian,uk       [WIP]      https://github.com/snowballstem/snowball/pull/178

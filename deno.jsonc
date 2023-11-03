@@ -1,0 +1,25 @@
+{
+	"tasks": {
+		"compile": "deno run -A ./scripts/compile.ts",
+		"test": "deno test --watch ./tests"
+	},
+	"imports": {
+		"std/": "https://deno.land/std@0.200.0/"
+	},
+	"fmt": {
+		"semiColons": false,
+		"useTabs": true,
+		"lineWidth": 120,
+		"indentWidth": 4,
+		"singleQuote": true,
+		"proseWrap": "preserve",
+		"exclude": [
+			"dist/stop",
+			"*.md",
+			"snowball"
+		]
+	},
+	"compilerOptions": {
+		"strict": true
+	}
+}
